@@ -4,6 +4,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { HideOnPaths } from "@/components/HideOnPaths";
 import { FloatingContact } from "@/components/FloatingContact";
+import { ScrollToTop } from "@/components/NavLink";
 import { RevealObserver } from "@/components/RevealObserver";
 import { SITE } from "@/data/site";
 import "./globals.css";
@@ -95,6 +96,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </HideOnPaths>
         <FloatingContact />
         <RevealObserver />
+        <ScrollToTop />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}

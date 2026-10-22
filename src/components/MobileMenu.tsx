@@ -1,16 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { NAV, SITE } from "@/data/site";
 import { Chat, Close, Menu, Phone } from "./icons";
+import { NavLink } from "./NavLink";
 
 export function MobileMenu() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const firstLinkRef = useRef<HTMLAnchorElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   // Đóng menu khi đổi trang (điều chỉnh state trong lúc render theo khuyến nghị của React)
   const [lastPath, setLastPath] = useState(pathname);
@@ -23,7 +23,7 @@ export function MobileMenu() {
     if (!open) return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    firstLinkRef.current?.focus();
+    panelRef.current?.querySelector<HTMLElement>("a")?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setOpen(false);
@@ -53,22 +53,22 @@ export function MobileMenu() {
 
       {open && (
         <div
+          ref={panelRef}
           id="mobile-menu"
           className="fixed inset-x-0 bottom-0 top-[var(--header-h)] z-40 overflow-y-auto bg-cream md:hidden"
           style={{ animation: "fade-in 0.25s var(--ease-soft) both" }}
         >
           <nav aria-label="Menu chính" className="container-x flex min-h-full flex-col pb-10 pt-6">
             <ul className="divide-y divide-ink/15 border-y hairline">
-              {NAV.map((item, i) => (
+              {NAV.map((item) => (
                 <li key={item.href}>
-                  <Link
-                    ref={i === 0 ? firstLinkRef : undefined}
+                  <NavLink
                     href={item.href}
-                    onClick={() => setOpen(false)}
+                    onNavigate={() => setOpen(false)}
                     className="display flex min-h-16 items-center justify-between py-3 text-[2rem]"
                   >
                     {item.label}
-                  </Link>
+                  </NavLink>
                 </li>
               ))}
             </ul>
