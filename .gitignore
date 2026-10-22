@@ -8,5 +8,5 @@ out
 next-env.d.ts
 *.tsbuildinfo
 .DS_Store
-# ảnh gốc tải từ Drive (chỉ giữ ảnh đã tối ưu trong public/)
-photos-src
+# ảnh gốc (đã có bản tối ưu trong public/photos)
+Ảnh FB

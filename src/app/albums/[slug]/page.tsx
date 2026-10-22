@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AlbumCard } from "@/components/AlbumCard";
-import { Gallery } from "@/components/Gallery";
-import { ArrowRight } from "@/components/icons";
+import { AlbumGallery } from "@/components/AlbumGallery";
 import { LinkButton } from "@/components/LinkButton";
-import { PageHero } from "@/components/PageHero";
+import { Photo } from "@/components/Photo";
 import { ALBUMS, ALBUM_BY_SLUG } from "@/data/albums";
 import { SERVICE_BY_SLUG } from "@/data/services";
+import { SITE } from "@/data/site";
 import { pageMeta } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -29,94 +28,148 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
+const delay = (ms: number) => ({ "--d": `${ms}ms`, "--reveal-delay": `${ms}ms` }) as React.CSSProperties;
+
 export default async function AlbumPage({ params }: Props) {
   const { slug } = await params;
   const album = ALBUM_BY_SLUG[slug];
   if (!album) notFound();
 
   const index = ALBUMS.indexOf(album);
-  const next = ALBUMS[(index + 1) % ALBUMS.length];
   const prev = ALBUMS[(index - 1 + ALBUMS.length) % ALBUMS.length];
+  const next = ALBUMS[(index + 1) % ALBUMS.length];
   const primary = SERVICE_BY_SLUG[album.services[0]];
-  const related = ALBUMS.filter((a) => a.slug !== album.slug && a.services[0] === album.services[0]).slice(0, 3);
+  const cover = album.photos[0];
 
   return (
     <>
-      <PageHero
-        crumbs={[{ href: "/albums", label: "Bộ ảnh" }, { label: album.title }]}
-        eyebrow={`${primary.no} · ${primary.label}`}
-        title={album.title}
-      >
-        <p className="lead">{album.description}</p>
-        <ul className="mt-6 flex flex-wrap gap-2 text-sm">
-          <li className="rounded-full bg-sand-100 px-4 py-1.5 text-muted">{album.photos.length} ảnh</li>
-          {album.services.map((s) => (
-            <li key={s}>
-              <Link
-                href={`/dich-vu/${s}`}
-                className="inline-flex min-h-9 items-center rounded-full border hairline px-4 text-ink transition-colors hover:border-ink hover:bg-ink hover:text-cream"
-              >
-                {SERVICE_BY_SLUG[s].label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </PageHero>
-
-      <section className="container-x mt-12 md:mt-16" aria-label={`Ảnh trong bộ ${album.title}`}>
-        <Gallery photos={album.photos} />
-      </section>
-
-      <section className="container-x mt-20 md:mt-28" aria-label="Điều hướng giữa các bộ ảnh">
-        <div className="grid gap-px overflow-hidden border hairline bg-ink/10 sm:grid-cols-2">
+      {/* ── Đầu trang: chữ bên trái, ảnh bìa lớn bên phải ── */}
+      <section className="container-x grid gap-8 py-8 sm:py-10 lg:min-h-[calc(100svh-var(--header-h))] lg:grid-cols-12 lg:items-center lg:gap-10 lg:py-8">
+        <div className="lg:col-span-6">
           <Link
-            href={`/albums/${prev.slug}`}
-            className="group block bg-cream p-6 transition-colors hover:bg-sand-100 sm:p-8"
+            href="/albums"
+            className="rise inline-flex min-h-11 items-center text-sm text-muted transition-colors hover:text-ink"
+            data-reveal
           >
-            <span className="text-sm text-muted">← Bộ trước</span>
-            <span className="display mt-2 block text-[1.8rem] transition-colors group-hover:text-sunset">{prev.title}</span>
+            ← Tất cả bộ ảnh
           </Link>
-          <Link
-            href={`/albums/${next.slug}`}
-            className="group block bg-cream p-6 text-left transition-colors hover:bg-sand-100 sm:p-8 sm:text-right"
+          <p className="eyebrow rise mt-3" data-reveal style={delay(40)}>
+            {primary.label}
+          </p>
+          <h1
+            className="display title-first rise mt-4 text-[clamp(2.6rem,min(6vw,9svh),4.6rem)]"
+            data-reveal
+            style={delay(100)}
           >
-            <span className="text-sm text-muted">Bộ tiếp theo →</span>
-            <span className="display mt-2 block text-[1.8rem] transition-colors group-hover:text-sunset">{next.title}</span>
-          </Link>
+            {album.title}
+          </h1>
+          <p className="display rise mt-4 text-[clamp(1.35rem,2.2vw,1.7rem)] italic text-sunset" data-reveal style={delay(170)}>
+            {primary.tagline}
+          </p>
+          <p className="lead rise mt-4 max-w-lg" data-reveal style={delay(230)}>
+            {album.description}
+          </p>
+
+          <ul className="rise mt-6 flex flex-wrap gap-2 text-sm" data-reveal style={delay(290)}>
+            {album.services.map((s) => (
+              <li key={s}>
+                <Link
+                  href={`/dich-vu/${s}`}
+                  className="inline-flex min-h-9 items-center rounded-full border hairline px-4 text-ink transition-colors hover:border-ink hover:bg-ink hover:text-cream"
+                >
+                  {SERVICE_BY_SLUG[s].label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          <div className="rise mt-7 flex flex-wrap gap-3" data-reveal style={delay(350)}>
+            <LinkButton href={`/lien-he?dv=${primary.slug}#dat-lich`}>Chọn phong cách này</LinkButton>
+            <LinkButton href={SITE.zalo} variant="outline" arrow={false} external>
+              Hỏi qua Zalo
+            </LinkButton>
+          </div>
+          <p className="rise mt-5 text-sm text-muted" data-reveal style={delay(400)}>
+            {album.photos.length} ảnh trong bộ này. Cuộn xuống để xem hết.
+          </p>
+        </div>
+
+        <div className="lg:col-span-6">
+          {/* Chiều cao khớp màn hình ở máy tính; chiều rộng suy ra từ tỉ lệ 4:5 */}
+          <div className="drift relative mx-auto aspect-[4/5] w-full max-w-md overflow-hidden bg-sand-200 lg:ml-auto lg:mr-0 lg:h-[min(42rem,calc(100svh-var(--header-h)-4rem))] lg:w-auto lg:max-w-none">
+            <Photo
+              photo={cover}
+              fill
+              preload
+              quality={85}
+              sizes="(min-width: 1024px) 560px, (min-width: 448px) 448px, 100vw"
+              position="50% 22%"
+            />
+          </div>
         </div>
       </section>
 
-      <section className="section mt-20 bg-sand-100 md:mt-28" aria-labelledby="album-cta">
-        <div className="container-x grid gap-8 lg:grid-cols-12 lg:items-center" data-reveal>
-          <div className="lg:col-span-7">
-            <p className="eyebrow">{primary.label}</p>
-            <h2 id="album-cta" className="display mt-4 text-[clamp(2rem,4.2vw,3.2rem)]">
-              Thích phong cách này? Hãy cùng chúng tôi tạo <em>bộ ảnh của bạn</em>.
-            </h2>
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:col-span-5 lg:justify-end">
-            <LinkButton href={`/lien-he?dv=${primary.slug}#dat-lich`}>Đặt lịch tư vấn</LinkButton>
-            <LinkButton href={`/dich-vu/${primary.slug}`} variant="outline" arrow={false}>
-              Về dịch vụ này
+      {/* ── Các ảnh còn lại, xếp so le ── */}
+      <section
+        className="container-x mt-16 md:mt-28 lg:mt-36"
+        aria-label={`Ảnh trong bộ ${album.title}`}
+      >
+        <AlbumGallery photos={album.photos} from={1} />
+      </section>
+
+      {/* ── Kêu gọi đặt lịch ── */}
+      <section className="container-x py-24 text-center md:py-36" aria-labelledby="album-cta">
+        <div data-reveal>
+          <h2 id="album-cta" className="display mx-auto max-w-2xl text-[clamp(2rem,4.4vw,3.2rem)]">
+            Thích phong cách này? <em>Mình hẹn lịch nhé.</em>
+          </h2>
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <LinkButton href={`/lien-he?dv=${primary.slug}#dat-lich`}>Đặt lịch chụp</LinkButton>
+            <LinkButton href="/albums" variant="outline" arrow={false}>
+              Xem bộ ảnh khác
             </LinkButton>
           </div>
         </div>
+      </section>
 
-        {related.length > 0 && (
-          <div className="container-x mt-16 md:mt-20">
-            <div className="flex items-end justify-between gap-4 border-b hairline pb-4">
-              <h2 className="display text-[1.9rem]">Bộ ảnh cùng dịch vụ</h2>
-              <Link href={`/dich-vu/${primary.slug}`} className="link-line hidden text-ink sm:inline-flex">
-                Xem tất cả <ArrowRight size={18} />
+      {/* ── Bộ trước / bộ sau ── */}
+      <section className="bg-sand-100 pb-24 pt-16 md:pb-32 md:pt-24" aria-labelledby="album-explore">
+        <div className="container-x">
+          <p id="album-explore" className="eyebrow text-center" data-reveal>
+            Khám phá
+          </p>
+          <div className="mx-auto mt-8 grid max-w-3xl grid-cols-2 gap-3 sm:gap-5">
+            {[
+              { album: prev, label: "Bộ trước" },
+              { album: next, label: "Bộ tiếp theo" },
+            ].map(({ album: a, label }, i) => (
+              <Link
+                key={a.slug}
+                href={`/albums/${a.slug}`}
+                className="group on-dark relative block aspect-[3/4] overflow-hidden bg-ink"
+                data-reveal
+                style={{ "--reveal-delay": `${i * 100}ms` } as React.CSSProperties}
+              >
+                <Photo
+                  photo={a.photos[0]}
+                  fill
+                  quality={60}
+                  alt=""
+                  sizes="(min-width: 768px) 380px, 46vw"
+                  className="transition-transform duration-[1400ms] ease-[var(--ease-soft)] group-hover:scale-[1.05]"
+                />
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-linear-to-t from-ink/85 from-10% via-ink/30 via-45% to-transparent"
+                />
+                <div className="absolute inset-x-0 bottom-0 p-4 text-cream sm:p-6">
+                  <p className="text-xs font-medium uppercase tracking-[0.2em] text-sunset-light">{label}</p>
+                  <p className="display mt-1.5 text-[1.3rem] leading-tight sm:text-[1.6rem]">{a.title}</p>
+                </div>
               </Link>
-            </div>
-            <div className="mt-8 grid grid-cols-1 gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8">
-              {related.map((a, i) => (
-                <AlbumCard key={a.slug} album={a} delay={i * 80} />
-              ))}
-            </div>
+            ))}
           </div>
-        )}
+        </div>
       </section>
     </>
   );

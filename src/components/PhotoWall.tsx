@@ -319,4 +319,12 @@ export function PhotoWall({ tiles }: { tiles: WallTile[] }) {
             {renderTiles(list, "a", c)}
           </ul>
           {duplicate && (
-            <ul d
+            <ul data-copy="b" aria-hidden="true" inert className="flex flex-col gap-[var(--gap)] pb-[var(--gap)]">
+              {renderTiles(list, "b", c)}
+            </ul>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
